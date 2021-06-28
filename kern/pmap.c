@@ -105,7 +105,7 @@ boot_alloc(uint32_t n)
 
   result = nextfree;
   if(n) {
-    nextfree+=ROUNDUP(1, n);
+    nextfree=ROUNDUP((nextfree+n), PGSIZE);
   }
   return result;
 }
@@ -134,6 +134,7 @@ mem_init(void)
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
 	kern_pgdir = (pde_t *) boot_alloc(PGSIZE);
+  cprintf("kern_pgdir %p &kern_pgdir %p\n",kern_pgdir,&kern_pgdir);
 	memset(kern_pgdir, 0, PGSIZE);
 
 	//////////////////////////////////////////////////////////////////////
