@@ -135,7 +135,6 @@ mem_init(void)
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
 	kern_pgdir = (pde_t *) boot_alloc(PGSIZE);
-  cprintf("kern_pgdir %p &kern_pgdir %p\n",kern_pgdir,&kern_pgdir);
 	memset(kern_pgdir, 0, PGSIZE);
 
 	//////////////////////////////////////////////////////////////////////
@@ -162,6 +161,10 @@ mem_init(void)
 	//////////////////////////////////////////////////////////////////////
 	// Make 'envs' point to an array of size 'NENV' of 'struct Env'.
 	// LAB 3: Your code here.
+
+  uint32_t env_array_size = sizeof(struct Env) * NENV;
+  envs = boot_alloc(env_array_size);
+  memset(envs, 0, env_array_size);
 
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
@@ -195,6 +198,8 @@ mem_init(void)
 	//    - the new image at UENVS  -- kernel R, user R
 	//    - envs itself -- kernel RW, user NONE
 	// LAB 3: Your code here.
+
+  boot_map_region(kern_pgdir, UENVS, env_array_size, PADDR(envs), PTE_U|PTE_P);
 
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
