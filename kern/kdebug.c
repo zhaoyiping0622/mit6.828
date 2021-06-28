@@ -1,7 +1,7 @@
+#include <inc/assert.h>
+#include <inc/memlayout.h>
 #include <inc/stab.h>
 #include <inc/string.h>
-#include <inc/memlayout.h>
-#include <inc/assert.h>
 
 #include <kern/kdebug.h>
 #include <kern/pmap.h>
@@ -18,7 +18,6 @@ struct UserStabData {
 	const char *stabstr;
 	const char *stabstr_end;
 };
-
 
 // stab_binsearch(stabs, region_left, region_right, type, addr)
 //
@@ -56,52 +55,47 @@ struct UserStabData {
 //		stab_binsearch(stabs, &left, &right, N_SO, 0xf0100184);
 //	will exit setting left = 118, right = 554.
 //
-static void
-stab_binsearch(const struct Stab *stabs, int *region_left, int *region_right,
-	       int type, uintptr_t addr)
-{
-	int l = *region_left, r = *region_right, any_matches = 0;
+static void stab_binsearch(const struct Stab *stabs, int *region_left,
+                           int *region_right, int type, uintptr_t addr) {
+  int l = *region_left, r = *region_right, any_matches = 0;
 
-	while (l <= r) {
-		int true_m = (l + r) / 2, m = true_m;
+  while (l <= r) {
+    int true_m = (l + r) / 2, m = true_m;
 
-		// search for earliest stab with right type
-		while (m >= l && stabs[m].n_type != type)
-			m--;
-		if (m < l) {	// no match in [l, m]
-			l = true_m + 1;
-			continue;
-		}
+    // search for earliest stab with right type
+    while (m >= l && stabs[m].n_type != type)
+      m--;
+    if (m < l) { // no match in [l, m]
+      l = true_m + 1;
+      continue;
+    }
 
-		// actual binary search
-		any_matches = 1;
-		if (stabs[m].n_value < addr) {
-			*region_left = m;
-			l = true_m + 1;
-		} else if (stabs[m].n_value > addr) {
-			*region_right = m - 1;
-			r = m - 1;
-		} else {
-			// exact match for 'addr', but continue loop to find
-			// *region_right
-			*region_left = m;
-			l = m;
-			addr++;
-		}
-	}
+    // actual binary search
+    any_matches = 1;
+    if (stabs[m].n_value < addr) {
+      *region_left = m;
+      l = true_m + 1;
+    } else if (stabs[m].n_value > addr) {
+      *region_right = m - 1;
+      r = m - 1;
+    } else {
+      // exact match for 'addr', but continue loop to find
+      // *region_right
+      *region_left = m;
+      l = m;
+      addr++;
+    }
+  }
 
-	if (!any_matches)
-		*region_right = *region_left - 1;
-	else {
-		// find rightmost region containing 'addr'
-		for (l = *region_right;
-		     l > *region_left && stabs[l].n_type != type;
-		     l--)
-			/* do nothing */;
-		*region_left = l;
-	}
+  if (!any_matches)
+    *region_right = *region_left - 1;
+  else {
+    // find rightmost region containing 'addr'
+    for (l = *region_right; l > *region_left && stabs[l].n_type != type; l--)
+      /* do nothing */;
+    *region_left = l;
+  }
 }
-
 
 // debuginfo_eip(addr, info)
 //
