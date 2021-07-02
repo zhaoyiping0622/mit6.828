@@ -66,6 +66,16 @@ trap_init(void)
 
 	// LAB 3: Your code here.
 
+#define TRAPSETGATE(name, num, istrap, sel, dpl) \
+  void name(); \
+  SETGATE(idt[num], istrap, sel, name, dpl)
+
+  cprintf("in trap_init\n");
+  // void divide_error_traphandler();
+  // SETGATE(idt[T_DIVIDE], 0, GD_KT, divide_error_traphandler, 0);
+
+  TRAPHANDLERLIST(TRAPSETGATE, TRAPSETGATE)
+
 	// Per-CPU setup 
 	trap_init_percpu();
 }
@@ -145,6 +155,11 @@ trap_dispatch(struct Trapframe *tf)
 	// Handle processor exceptions.
 	// LAB 3: Your code here.
 
+  cprintf("in trap_dispatch\n");
+  if(tf->tf_trapno == T_PGFLT) {
+    page_fault_handler(tf);
+  }
+
 	// Unexpected trap: The user process or the kernel has a bug.
 	print_trapframe(tf);
 	if (tf->tf_cs == GD_KT)
@@ -208,6 +223,8 @@ page_fault_handler(struct Trapframe *tf)
 
 	// We've already handled kernel-mode exceptions, so if we get here,
 	// the page fault happened in user mode.
+
+  cprintf("shit\n");
 
 	// Destroy the environment that caused the fault.
 	cprintf("[%08x] user fault va %08x ip %08x\n",
