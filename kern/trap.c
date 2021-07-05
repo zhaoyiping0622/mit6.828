@@ -70,14 +70,11 @@ trap_init(void)
   void name(); \
   SETGATE(idt[num], istrap, sel, name, dpl)
 
-  cprintf("in trap_init\n");
-  // void divide_error_traphandler();
-  // SETGATE(idt[T_DIVIDE], 0, GD_KT, divide_error_traphandler, 0);
-
   TRAPHANDLERLIST(TRAPSETGATE, TRAPSETGATE)
 
 	// Per-CPU setup 
 	trap_init_percpu();
+#undef TRAPSETGATE
 }
 
 // Initialize and load the per-CPU TSS and IDT
@@ -155,19 +152,20 @@ trap_dispatch(struct Trapframe *tf)
 	// Handle processor exceptions.
 	// LAB 3: Your code here.
 
-  cprintf("in trap_dispatch\n");
-  if(tf->tf_trapno == T_PGFLT) {
-    page_fault_handler(tf);
+  switch (tf->tf_trapno){
+    case T_BRKPT: breakpoint_handler(tf); break;
+    case T_PGFLT: page_fault_handler(tf); break;
+    case T_SYSCALL: syscall_handler(tf); break;
+    default:
+      // Unexpected trap: The user process or the kernel has a bug.
+      print_trapframe(tf);
+      if (tf->tf_cs == GD_KT)
+        panic("unhandled trap in kernel");
+      else {
+        env_destroy(curenv);
+        return;
+      }
   }
-
-	// Unexpected trap: The user process or the kernel has a bug.
-	print_trapframe(tf);
-	if (tf->tf_cs == GD_KT)
-		panic("unhandled trap in kernel");
-	else {
-		env_destroy(curenv);
-		return;
-	}
 }
 
 void
@@ -212,6 +210,7 @@ trap(struct Trapframe *tf)
 void
 page_fault_handler(struct Trapframe *tf)
 {
+  cprintf("in page fault handler\n");
 	uint32_t fault_va;
 
 	// Read processor's CR2 register to find the faulting address
@@ -221,10 +220,10 @@ page_fault_handler(struct Trapframe *tf)
 
 	// LAB 3: Your code here.
 
+  print_trapframe(tf);
+
 	// We've already handled kernel-mode exceptions, so if we get here,
 	// the page fault happened in user mode.
-
-  cprintf("shit\n");
 
 	// Destroy the environment that caused the fault.
 	cprintf("[%08x] user fault va %08x ip %08x\n",
@@ -233,3 +232,13 @@ page_fault_handler(struct Trapframe *tf)
 	env_destroy(curenv);
 }
 
+void breakpoint_handler(struct Trapframe *tf)
+{
+	print_trapframe(tf);
+  monitor(tf);
+  //cprintf("  trap 0x%08x Breakpoint\n", tf->tf_trapno);
+}
+
+void syscall_handler(struct Trapframe *tf) {
+  tf->tf_regs.reg_eax = syscall(tf->tf_regs.reg_eax, tf->tf_regs.reg_edx, tf->tf_regs.reg_ecx, tf->tf_regs.reg_ebx, tf->tf_regs.reg_edi, tf->tf_regs.reg_esi);
+}

@@ -45,7 +45,7 @@
   handler_noec(divide_error_traphandler, T_DIVIDE, 0, GD_KT, 0)\
   handler_noec(debug_exceptions_traphandler, T_DEBUG, 0, GD_KT, 0)\
   /* FIXME: non-maskable interrupt */\
-  handler_noec(breakpoint_traphandler, T_BRKPT, 0, GD_KT, 0)\
+  handler_noec(breakpoint_traphandler, T_BRKPT, 0, GD_KT, 3)\
   handler_noec(overflow_traphandler, T_OFLOW, 0, GD_KT, 0)\
   handler_noec(bounds_check_traphandler, T_BOUND, 0, GD_KT, 0)\
   handler_noec(invalid_opcode_traphandler, T_ILLOP, 0, GD_KT, 0)\
@@ -57,6 +57,7 @@
   handler(general_protection_fault_traphandler, T_GPFLT, 0, GD_KT, 3)\
   handler(page_fault_traphandler, T_PGFLT, 0, GD_KT, 0)\
   handler(floating_point_error_traphandler, T_FPERR, 0, GD_KT, 0)\
+  handler_noec(syscall_traphandler, T_SYSCALL, 0, GD_KT, 3)\
 
 #ifndef __ASSEMBLER__
 

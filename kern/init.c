@@ -43,8 +43,6 @@ i386_init(void)
 	ENV_CREATE(user_divzero, ENV_TYPE_USER);
 #endif // TEST*
 
-  cprintf("env_create finished\n");
-
 	// We only have one user environment for now, so just run it.
 	env_run(&envs[0]);
 }
