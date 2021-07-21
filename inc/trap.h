@@ -58,6 +58,11 @@
   handler(page_fault_traphandler, T_PGFLT, 0, GD_KT, 0)\
   handler(floating_point_error_traphandler, T_FPERR, 0, GD_KT, 0)\
   handler_noec(syscall_traphandler, T_SYSCALL, 0, GD_KT, 3)\
+  handler_noec(irq_timer_traphandler, IRQ_OFFSET+IRQ_TIMER, 0, GD_KT, 3)\
+  handler_noec(irq_kbd_traphandler, IRQ_OFFSET+IRQ_KBD, 0, GD_KT, 3)\
+  handler_noec(irq_serial_traphandler, IRQ_OFFSET+IRQ_SERIAL, 0, GD_KT, 3)\
+  handler_noec(irq_suprious, IRQ_OFFSET+IRQ_SPURIOUS, 0, GD_KT, 3)\
+  handler_noec(irq_ide_traphandler, IRQ_OFFSET+IRQ_IDE, 0, GD_KT, 3)\
 
 #ifndef __ASSEMBLER__
 

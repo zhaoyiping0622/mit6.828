@@ -611,8 +611,10 @@ mmio_map_region(physaddr_t pa, size_t size)
 	//
 	// Your code here:
   uintptr_t ret=base;
-  size=ROUNDUP(size, PGSIZE);
-  boot_map_region(kern_pgdir, base, size, pa, PTE_W|PTE_PCD|PTE_PWT);
+  uintptr_t begin = ROUNDDOWN(pa, PGSIZE);
+  uintptr_t end = ROUNDUP(pa+size, PGSIZE);
+  size = end-begin;
+  boot_map_region(kern_pgdir, base, size, begin, PTE_W|PTE_PCD|PTE_PWT);
   base+=size;
   if(base>MMIOLIM)
     panic("mmio_map_region overflow\n");
@@ -653,6 +655,10 @@ user_mem_check(struct Env *env, const void *va, size_t len, int perm)
     if(!pg || (*pg&perm)!=perm){
       if((int32_t)va>(int32_t)lo)
         lo=va;
+      if(pg)
+        cprintf("*pg&PTE_W %d perm %08x\n",*pg&PTE_W, perm);
+      else
+        cprintf("pg not exist\n");
       user_mem_check_addr = (intptr_t)lo;
       return -E_FAULT;
     }
@@ -1124,4 +1130,22 @@ check_page_installed_pgdir(void)
 	page_free(pp0);
 
 	cprintf("check_page_installed_pgdir() succeeded!\n");
+}
+
+void print_pgdir(pte_t* pgdir) {
+  cprintf("pgdir:\n");
+  for(uint32_t i=0;i<0x3ff;i++){
+    uintptr_t pde = pgdir[i];
+    if((pde&PTE_P)==0)continue;
+    for(uint32_t j=0;j<0x3ff;j++){
+      pte_t* pte = (pte_t*)KADDR(PTE_ADDR(pde))+j;
+      if((*pte&PTE_P)==0)continue;
+      cprintf("%08x exists\n",(i<<PDXSHIFT)|(j<<PTXSHIFT));
+    }
+  }
+}
+
+int check_address(pte_t* pgdir,void* va){
+  pte_t* pte=pgdir_walk(pgdir, va, 0);
+  return pte&&(*pte&PTE_P);
 }
