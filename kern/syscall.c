@@ -316,7 +316,7 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
   if(perm&(~PTE_SYSCALL)) return -E_INVAL;
   pte_t* pte = pgdir_walk(curenv->env_pgdir, srcva, false);
   if((uintptr_t)srcva<UTOP&&(pte==NULL||!(*pte&PTE_P)))return -E_INVAL;
-  if((perm&PTE_W)&&!(*pte&PTE_W)) return -E_INVAL;
+  if((uintptr_t)srcva<UTOP&&(perm&PTE_W)&&!(*pte&PTE_W)) return -E_INVAL;
   // TODO: srcva or dstva > UTOP ?
   if((uintptr_t)srcva<UTOP&&(uintptr_t)(target->env_ipc_dstva)<UTOP){
     struct PageInfo *pp = page_lookup(curenv->env_pgdir, srcva, NULL);
