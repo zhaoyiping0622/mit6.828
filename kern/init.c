@@ -50,6 +50,8 @@ i386_init(void)
 	// Acquire the big kernel lock before waking up APs
 	// Your code here:
 
+  lock_kernel();
+
 	// Starting non-boot CPUs
 	boot_aps();
 
@@ -127,8 +129,12 @@ mp_main(void)
 	//
 	// Your code here:
 
+  lock_kernel();
+  cprintf("mp_main: %d\n",cpunum());
+  sched_yield();
+
 	// Remove this after you finish Exercise 6
-	for (;;);
+	// for (;;);
 }
 
 /*

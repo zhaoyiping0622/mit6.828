@@ -52,8 +52,8 @@ SECTIONS
 		*(.dynbss)
 		*(.bss .bss.*)
 		*(COMMON)
-		PROVIDE(end = .);
 	}
+	PROVIDE(end = .);
 
 
 	/DISCARD/ : {
