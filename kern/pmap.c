@@ -658,7 +658,7 @@ user_mem_check(struct Env *env, const void *va, size_t len, int perm)
       if((int32_t)va>(int32_t)lo)
         lo=va;
       if(pg)
-        cprintf("*pg&PTE_W %d perm %08x\n",*pg&PTE_W, perm);
+        cprintf("*pg&perm %d perm %08x\n",*pg&perm, perm);
       else
         cprintf("pg not exist\n");
       user_mem_check_addr = (intptr_t)lo;

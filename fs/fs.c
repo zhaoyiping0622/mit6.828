@@ -65,6 +65,7 @@ alloc_block(void)
   for(uint32_t i=2;i<super->s_nblocks;i++){
     if(bitmap[i/32]&(1<<(i%32))){
       bitmap[i/32]&=~(1<<(i%32));
+      memset(diskaddr(i), 0, BLKSIZE);
       return i;
     }
   }
@@ -139,18 +140,24 @@ fs_init(void)
 static int
 file_block_walk(struct File *f, uint32_t filebno, uint32_t **ppdiskbno, bool alloc)
 {
+  int r;
   if(filebno>=NDIRECT+NINDIRECT)
     return -E_INVAL;
   uint32_t *slot;
   if(filebno<NDIRECT){
     slot=f->f_direct+filebno;
   } else {
-    if(f->f_indirect<=1){
+    if(f->f_indirect<=1||f->f_indirect>=super->s_nblocks){
       if(!alloc)return -E_NOT_FOUND;
-      f->f_indirect=alloc_block();
-      if(f->f_indirect<0)return f->f_indirect;
+      r=alloc_block();
+      if(r<0)return r;
+      f->f_indirect=r;
     }
-    slot=diskaddr(f->f_indirect)+(filebno-NDIRECT);
+    slot=(uint32_t*)(diskaddr(f->f_indirect))+(filebno-NDIRECT);
+  }
+  if(*slot<=1||*slot>=super->s_nblocks){
+    if(!alloc)return -E_NOT_FOUND;
+    *slot=alloc_block();
   }
   if(ppdiskbno)*ppdiskbno=slot;
   return 0;
@@ -172,9 +179,10 @@ file_get_block(struct File *f, uint32_t filebno, char **blk)
   uint32_t *blockno;
   r = file_block_walk(f, filebno, &blockno, true);
   if(r<0)return r;
-  if(*blockno<=1){
-    *blockno=alloc_block();
-    if(*blockno<=1)return *blockno;
+  if(*blockno<=1||*blockno>=super->s_nblocks){
+    r=alloc_block();
+    if(r<0)return r;
+    *blockno=r;
   }
   *blk=diskaddr(*blockno);
   return 0;

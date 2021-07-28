@@ -64,13 +64,16 @@ duppage(envid_t envid, unsigned pn)
   void* const addr = (void*)(pn<<PTXSHIFT);
 
 	// LAB 4: Your code here.
-  if(uvpt[pn]&(PTE_W|PTE_COW)){
-    r = sys_page_map(0, addr, envid, addr, PTE_P|PTE_U|PTE_COW);
+  if(uvpt[pn]&PTE_SHARE) {
+    r = sys_page_map(0, addr, envid, addr, (uvpt[pn]&PTE_SYSCALL));
+    if(r<0) panic("failed in duppage, error: %e addr %08x pn %08x\n",r,addr,pn);
+  } else if(uvpt[pn]&(PTE_W|PTE_COW)){
+    r = sys_page_map(0, addr, envid, addr, ((uvpt[pn]&PTE_SYSCALL)&(~PTE_W))|PTE_COW);
     if(r<0) panic("failed in duppage, error: %e\n",r);
-    r = sys_page_map(0, addr, 0, addr, PTE_P|PTE_U|PTE_COW);
+    r = sys_page_map(0, addr, 0, addr, ((uvpt[pn]&PTE_SYSCALL)&(~PTE_W))|PTE_COW);
     if(r<0) panic("failed in duppage, error: %e\n",r);
   } else {
-    r = sys_page_map(0, addr, envid, addr, PTE_P|PTE_U);
+    r = sys_page_map(0, addr, envid, addr, (uvpt[pn]&PTE_SYSCALL));
     if(r<0) panic("failed in duppage, error: %e addr %08x pn %08x\n",r,addr,pn);
   }
 	return 0;

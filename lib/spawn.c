@@ -302,6 +302,14 @@ static int
 copy_shared_pages(envid_t child)
 {
 	// LAB 5: Your code here.
+  for(uint32_t i=0;i<USTACKTOP;i+=PGSIZE){
+    unsigned pn = PGNUM(i);
+    void* const addr = (void*)i;
+    if((uvpd[PDX(i)]&PTE_P)&&(uvpt[pn]&PTE_P)&&(uvpt[pn]&PTE_U)&&(uvpt[pn]&PTE_SHARE)){
+      int r = sys_page_map(0, addr, child, addr, uvpt[pn]&PTE_SYSCALL);
+      if(r<0) panic("failed in copy_shared_pages, error: %e addr %08x pn %08x\n",r,addr,pn);
+    }
+  }
 	return 0;
 }
 

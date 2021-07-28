@@ -200,6 +200,8 @@ trap_dispatch(struct Trapframe *tf)
     case T_PGFLT: page_fault_handler(tf); return;
     case T_SYSCALL: syscall_handler(tf); return;
     case IRQ_OFFSET+IRQ_TIMER: lapic_eoi(); sched_yield();
+    case IRQ_OFFSET+IRQ_KBD: kbd_intr(); return;
+    case IRQ_OFFSET+IRQ_SERIAL: serial_intr(); return;
   }
 
 	// Handle spurious interrupts
@@ -346,8 +348,10 @@ page_fault_handler(struct Trapframe *tf)
 
 	// LAB 4: Your code here.
 
-  if(curenv->env_pgfault_upcall == NULL)
+  if(curenv->env_pgfault_upcall == NULL){
+    cprintf("no env_pgfault_upcall\n");
     goto fail;
+  }
 
   uint32_t nesp;
   

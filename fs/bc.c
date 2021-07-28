@@ -6,7 +6,7 @@ void*
 diskaddr(uint32_t blockno)
 {
 	if (blockno == 0 || (super && blockno >= super->s_nblocks))
-		panic("bad block number %08x in diskaddr", blockno);
+		panic("bad block number %08x in diskaddr\n", blockno);
 	return (char*) (DISKMAP + blockno * BLKSIZE);
 }
 
